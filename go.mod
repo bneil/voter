@@ -1,3 +1,3 @@
-module github.com/bneil/voter
+module voter
 
 go 1.23.0

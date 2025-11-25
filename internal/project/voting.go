@@ -1,4 +1,4 @@
-package game
+package project
 
 import (
 	"errors"
@@ -51,11 +51,11 @@ func (vs *VotingService) GetVoteCounts(decision *models.Decision) map[string]int
 }
 
 // CreateVote creates a vote record
-func (vs *VotingService) CreateVote(id, decisionID, gameID, agentID, option string) *models.Vote {
+func (vs *VotingService) CreateVote(id, decisionID, projectID, agentID, option string) *models.Vote {
 	return &models.Vote{
 		ID:         id,
 		DecisionID: decisionID,
-		GameID:     gameID,
+		ProjectID:  projectID,
 		AgentID:    agentID,
 		Option:     option,
 		Timestamp:  time.Now(),

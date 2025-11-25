@@ -1,4 +1,4 @@
-package game
+package project
 
 import (
 	"fmt"
@@ -19,31 +19,31 @@ func NewProgressionManager(service *Service) *ProgressionManager {
 	}
 }
 
-// AdvanceGame advances the game to the next decision based on the current winner
-func (pm *ProgressionManager) AdvanceGame(gameID string, nextDecisionDesc string, nextOptions []string) (*models.Decision, error) {
-	game, err := pm.service.GetGame(gameID)
+// AdvanceProject advances the project to the next decision based on the current winner
+func (pm *ProgressionManager) AdvanceProject(projectID string, nextDecisionDesc string, nextOptions []string) (*models.Decision, error) {
+	project, err := pm.service.GetProject(projectID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get game: %w", err)
+		return nil, fmt.Errorf("failed to get project: %w", err)
 	}
 
-	if !game.CanAcceptVotes() {
-		return nil, ErrGameNotActive
+	if !project.CanAcceptVotes() {
+		return nil, ErrProjectNotActive
 	}
 
 	// Check if current decision is complete
-	currentDecision := game.GetCurrentDecision()
+	currentDecision := project.GetCurrentDecision()
 	if currentDecision != nil && currentDecision.State == models.DecisionStateVoting {
 		return nil, fmt.Errorf("current decision is still active")
 	}
 
-	// Check if game should end
-	if pm.shouldEndGame(game) {
-		return nil, pm.service.EndGame(gameID)
+	// Check if project should end
+	if pm.shouldEndProject(project) {
+		return nil, pm.service.EndProject(projectID)
 	}
 
 	// Start next decision
-	decisionID := fmt.Sprintf("decision_%d", game.CurrentTurn+1)
-	decision, err := pm.service.StartDecision(gameID, decisionID, nextDecisionDesc, nextOptions)
+	decisionID := fmt.Sprintf("decision_%d", project.CurrentTurn+1)
+	decision, err := pm.service.StartDecision(projectID, decisionID, nextDecisionDesc, nextOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to start next decision: %w", err)
 	}
@@ -51,38 +51,38 @@ func (pm *ProgressionManager) AdvanceGame(gameID string, nextDecisionDesc string
 	return decision, nil
 }
 
-// shouldEndGame determines if the game should end based on various conditions
-func (pm *ProgressionManager) shouldEndGame(game *models.Game) bool {
+// shouldEndProject determines if the project should end based on various conditions
+func (pm *ProgressionManager) shouldEndProject(project *models.Project) bool {
 	// End if max turns reached
-	if game.CurrentTurn >= game.MaxTurns {
+	if project.CurrentTurn >= project.MaxTurns {
 		return true
 	}
 
-	// End if game is in a terminal state
-	if game.IsComplete() {
+	// End if project is in a terminal state
+	if project.IsComplete() {
 		return true
 	}
 
-	// Could add more complex logic here based on game-specific rules
+	// Could add more complex logic here based on project-specific rules
 	// For example, if a certain score is reached, or if no progress is being made
 
 	return false
 }
 
-// CalculateGameScore calculates the overall score for a completed game
-func (pm *ProgressionManager) CalculateGameScore(game *models.Game) int {
-	if !game.IsComplete() {
+// CalculateProjectScore calculates the overall score for a completed project
+func (pm *ProgressionManager) CalculateProjectScore(project *models.Project) int {
+	if !project.IsComplete() {
 		return 0
 	}
 
 	score := 0
 
 	// Score based on number of completed decisions
-	score += game.Metrics.TotalDecisions * 10
+	score += project.Metrics.TotalDecisions * 10
 
 	// Bonus for faster consensus (lower average time)
-	if game.Metrics.AverageConsensusTime > 0 {
-		avgSeconds := game.Metrics.AverageConsensusTime.Seconds()
+	if project.Metrics.AverageConsensusTime > 0 {
+		avgSeconds := project.Metrics.AverageConsensusTime.Seconds()
 		if avgSeconds < 30 {
 			score += 50
 		} else if avgSeconds < 60 {
@@ -91,30 +91,30 @@ func (pm *ProgressionManager) CalculateGameScore(game *models.Game) int {
 	}
 
 	// Score based on total votes (indicating participation)
-	score += game.Metrics.TotalVotes * 2
+	score += project.Metrics.TotalVotes * 2
 
 	return score
 }
 
-// GetGameProgress returns detailed progress information for a game
-func (pm *ProgressionManager) GetGameProgress(gameID string) (*GameProgress, error) {
-	game, err := pm.service.GetGame(gameID)
+// GetProjectProgress returns detailed progress information for a project
+func (pm *ProgressionManager) GetProjectProgress(projectID string) (*ProjectProgress, error) {
+	project, err := pm.service.GetProject(projectID)
 	if err != nil {
 		return nil, err
 	}
 
-	progress := &GameProgress{
-		GameID:             game.ID,
-		CurrentTurn:        game.CurrentTurn,
-		MaxTurns:           game.MaxTurns,
-		State:              game.State,
-		TotalDecisions:     game.Metrics.TotalDecisions,
+	progress := &ProjectProgress{
+		ProjectID:          project.ID,
+		CurrentTurn:        project.CurrentTurn,
+		MaxTurns:           project.MaxTurns,
+		State:              project.State,
+		TotalDecisions:     project.Metrics.TotalDecisions,
 		CompletedDecisions: 0,
 		ActiveDecisions:    0,
-		Decisions:          make([]DecisionProgress, 0, len(game.Decisions)),
+		Decisions:          make([]DecisionProgress, 0, len(project.Decisions)),
 	}
 
-	for _, decision := range game.Decisions {
+	for _, decision := range project.Decisions {
 		decisionProgress := DecisionProgress{
 			ID:          decision.ID,
 			TurnNumber:  decision.TurnNumber,
@@ -155,17 +155,17 @@ func (pm *ProgressionManager) GetGameProgress(gameID string) (*GameProgress, err
 	return progress, nil
 }
 
-// GameProgress represents detailed progress information for a game
-type GameProgress struct {
-	GameID             string             `json:"game_id"`
-	CurrentTurn        int                `json:"current_turn"`
-	MaxTurns           int                `json:"max_turns"`
-	State              models.GameState   `json:"state"`
-	TotalDecisions     int                `json:"total_decisions"`
-	CompletedDecisions int                `json:"completed_decisions"`
-	ActiveDecisions    int                `json:"active_decisions"`
-	ProgressPercentage float64            `json:"progress_percentage"`
-	Decisions          []DecisionProgress `json:"decisions"`
+// ProjectProgress represents detailed progress information for a project
+type ProjectProgress struct {
+	ProjectID          string              `json:"project_id"`
+	CurrentTurn        int                 `json:"current_turn"`
+	MaxTurns           int                 `json:"max_turns"`
+	State              models.ProjectState `json:"state"`
+	TotalDecisions     int                 `json:"total_decisions"`
+	CompletedDecisions int                 `json:"completed_decisions"`
+	ActiveDecisions    int                 `json:"active_decisions"`
+	ProgressPercentage float64             `json:"progress_percentage"`
+	Decisions          []DecisionProgress  `json:"decisions"`
 }
 
 // DecisionProgress represents progress information for a single decision

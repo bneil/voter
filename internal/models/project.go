@@ -4,36 +4,36 @@ import (
 	"time"
 )
 
-// GameState represents the current state of a game session
-type GameState string
+// ProjectState represents the current state of a project session
+type ProjectState string
 
 const (
-	GameStateActive    GameState = "active"
-	GameStatePaused    GameState = "paused"
-	GameStateCompleted GameState = "completed"
-	GameStateCancelled GameState = "cancelled"
+	ProjectStateActive    ProjectState = "active"
+	ProjectStatePaused    ProjectState = "paused"
+	ProjectStateCompleted ProjectState = "completed"
+	ProjectStateCancelled ProjectState = "cancelled"
 )
 
-// Game represents a complete game session
-type Game struct {
-	ID          string      `json:"id"`
-	Name        string      `json:"name"`
-	State       GameState   `json:"state"`
-	K           int         `json:"k"`         // K-ahead threshold
-	MaxTurns    int         `json:"max_turns"` // Maximum number of turns
-	CurrentTurn int         `json:"current_turn"`
-	CreatedAt   time.Time   `json:"created_at"`
-	UpdatedAt   time.Time   `json:"updated_at"`
-	CompletedAt *time.Time  `json:"completed_at,omitempty"`
-	Score       int         `json:"score"` // Overall game score
-	Metrics     GameMetrics `json:"metrics"`
-	Decisions   []Decision  `json:"decisions"`
+// Project represents a complete project session
+type Project struct {
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	State       ProjectState   `json:"state"`
+	K           int            `json:"k"`         // K-ahead threshold
+	MaxTurns    int            `json:"max_turns"` // Maximum number of turns
+	CurrentTurn int            `json:"current_turn"`
+	CreatedAt   time.Time      `json:"created_at"`
+	UpdatedAt   time.Time      `json:"updated_at"`
+	CompletedAt *time.Time     `json:"completed_at,omitempty"`
+	Score       int            `json:"score"` // Overall project score
+	Metrics     ProjectMetrics `json:"metrics"`
+	Decisions   []Decision     `json:"decisions"`
 }
 
-// Decision represents a single voting decision within a game
+// Decision represents a single voting decision within a project
 type Decision struct {
 	ID            string         `json:"id"`
-	GameID        string         `json:"game_id"`
+	ProjectID     string         `json:"project_id"`
 	TurnNumber    int            `json:"turn_number"`
 	Description   string         `json:"description"`
 	Options       []string       `json:"options"`
@@ -54,8 +54,8 @@ const (
 	DecisionStateCancelled DecisionState = "cancelled"
 )
 
-// GameMetrics tracks performance metrics for the game
-type GameMetrics struct {
+// ProjectMetrics tracks performance metrics for the project
+type ProjectMetrics struct {
 	TotalDecisions       int           `json:"total_decisions"`
 	AverageConsensusTime time.Duration `json:"average_consensus_time"`
 	TotalVotes           int           `json:"total_votes"`
@@ -65,26 +65,26 @@ type GameMetrics struct {
 type Vote struct {
 	ID         string    `json:"id"`
 	DecisionID string    `json:"decision_id"`
-	GameID     string    `json:"game_id"`
+	ProjectID  string    `json:"project_id"`
 	AgentID    string    `json:"agent_id"`
 	Option     string    `json:"option"`
 	Timestamp  time.Time `json:"timestamp"`
 }
 
-// NewGame creates a new game with the given parameters
-func NewGame(id, name string, k, maxTurns int) *Game {
+// NewProject creates a new project with the given parameters
+func NewProject(id, name string, k, maxTurns int) *Project {
 	now := time.Now()
-	return &Game{
+	return &Project{
 		ID:          id,
 		Name:        name,
-		State:       GameStateActive,
+		State:       ProjectStateActive,
 		K:           k,
 		MaxTurns:    maxTurns,
 		CurrentTurn: 0,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 		Score:       0,
-		Metrics: GameMetrics{
+		Metrics: ProjectMetrics{
 			TotalDecisions:       0,
 			AverageConsensusTime: 0,
 			TotalVotes:           0,
@@ -93,8 +93,8 @@ func NewGame(id, name string, k, maxTurns int) *Game {
 	}
 }
 
-// NewDecision creates a new decision for a game
-func NewDecision(id, gameID, description string, turnNumber int, options []string) *Decision {
+// NewDecision creates a new decision for a project
+func NewDecision(id, projectID, description string, turnNumber int, options []string) *Decision {
 	now := time.Now()
 	votes := make(map[string]int)
 	for _, option := range options {
@@ -103,7 +103,7 @@ func NewDecision(id, gameID, description string, turnNumber int, options []strin
 
 	return &Decision{
 		ID:            id,
-		GameID:        gameID,
+		ProjectID:     projectID,
 		TurnNumber:    turnNumber,
 		Description:   description,
 		Options:       options,
@@ -114,21 +114,21 @@ func NewDecision(id, gameID, description string, turnNumber int, options []strin
 	}
 }
 
-// IsComplete checks if the game is in a terminal state
-func (g *Game) IsComplete() bool {
-	return g.State == GameStateCompleted || g.State == GameStateCancelled
+// IsComplete checks if the project is in a terminal state
+func (p *Project) IsComplete() bool {
+	return p.State == ProjectStateCompleted || p.State == ProjectStateCancelled
 }
 
-// CanAcceptVotes checks if the game can accept new votes
-func (g *Game) CanAcceptVotes() bool {
-	return g.State == GameStateActive
+// CanAcceptVotes checks if the project can accept new votes
+func (p *Project) CanAcceptVotes() bool {
+	return p.State == ProjectStateActive
 }
 
 // GetCurrentDecision returns the current active decision, if any
-func (g *Game) GetCurrentDecision() *Decision {
-	for i := len(g.Decisions) - 1; i >= 0; i-- {
-		if g.Decisions[i].State == DecisionStateVoting {
-			return &g.Decisions[i]
+func (p *Project) GetCurrentDecision() *Decision {
+	for i := len(p.Decisions) - 1; i >= 0; i-- {
+		if p.Decisions[i].State == DecisionStateVoting {
+			return &p.Decisions[i]
 		}
 	}
 	return nil

@@ -6,44 +6,48 @@ import (
 	"voter/internal/models"
 )
 
-func TestNewGame(t *testing.T) {
-	game := models.NewGame("test-game", "Test Game", 3, 10)
+func TestNewProject(t *testing.T) {
+	project := models.NewProject("test-project", "Test Project", 3, 10)
 
-	if game.ID != "test-game" {
-		t.Errorf("Expected ID 'test-game', got '%s'", game.ID)
+	if project.ID != "test-project" {
+		t.Errorf("Expected ID 'test-project', got '%s'", project.ID)
 	}
 
-	if game.Name != "Test Game" {
-		t.Errorf("Expected name 'Test Game', got '%s'", game.Name)
+	if project.Name != "Test Project" {
+		t.Errorf("Expected name 'Test Project', got '%s'", project.Name)
 	}
 
-	if game.K != 3 {
-		t.Errorf("Expected K=3, got %d", game.K)
+	if project.K != 3 {
+		t.Errorf("Expected K=3, got %d", project.K)
 	}
 
-	if game.MaxTurns != 10 {
-		t.Errorf("Expected MaxTurns=10, got %d", game.MaxTurns)
+	if project.MaxTurns != 10 {
+		t.Errorf("Expected MaxTurns=10, got %d", project.MaxTurns)
 	}
 
-	if game.State != models.GameStateActive {
-		t.Errorf("Expected state 'active', got '%s'", game.State)
+	if project.State != models.ProjectStateActive {
+		t.Errorf("Expected state 'active', got '%s'", project.State)
 	}
 
-	if game.CurrentTurn != 0 {
-		t.Errorf("Expected CurrentTurn=0, got %d", game.CurrentTurn)
+	if project.CurrentTurn != 0 {
+		t.Errorf("Expected CurrentTurn=0, got %d", project.CurrentTurn)
+	}
+
+	if project.Score != 0 {
+		t.Errorf("Expected Score=0, got %d", project.Score)
 	}
 }
 
 func TestNewDecision(t *testing.T) {
 	options := []string{"option1", "option2", "option3"}
-	decision := models.NewDecision("test-decision", "game-1", "Test decision", 1, options)
+	decision := models.NewDecision("test-decision", "project-1", "Test decision", 1, options)
 
 	if decision.ID != "test-decision" {
 		t.Errorf("Expected ID 'test-decision', got '%s'", decision.ID)
 	}
 
-	if decision.GameID != "game-1" {
-		t.Errorf("Expected GameID 'game-1', got '%s'", decision.GameID)
+	if decision.ProjectID != "project-1" {
+		t.Errorf("Expected ProjectID 'project-1', got '%s'", decision.ProjectID)
 	}
 
 	if decision.Description != "Test decision" {
@@ -70,44 +74,44 @@ func TestNewDecision(t *testing.T) {
 	}
 }
 
-func TestGameIsComplete(t *testing.T) {
-	game := models.NewGame("test", "Test", 3, 10)
+func TestProjectIsComplete(t *testing.T) {
+	project := models.NewProject("test", "Test", 3, 10)
 
-	// Active game should not be complete
-	if game.IsComplete() {
-		t.Error("Expected active game to not be complete")
+	// Active project should not be complete
+	if project.IsComplete() {
+		t.Error("Expected active project to not be complete")
 	}
 
-	// Completed game should be complete
-	game.State = models.GameStateCompleted
-	if !game.IsComplete() {
-		t.Error("Expected completed game to be complete")
+	// Completed project should be complete
+	project.State = models.ProjectStateCompleted
+	if !project.IsComplete() {
+		t.Error("Expected completed project to be complete")
 	}
 
-	// Cancelled game should be complete
-	game.State = models.GameStateCancelled
-	if !game.IsComplete() {
+	// Cancelled project should be complete
+	project.State = models.ProjectStateCancelled
+	if !project.IsComplete() {
 		t.Error("Expected cancelled game to be complete")
 	}
 }
 
-func TestGameCanAcceptVotes(t *testing.T) {
-	game := models.NewGame("test", "Test", 3, 10)
+func TestProjectCanAcceptVotes(t *testing.T) {
+	project := models.NewProject("test", "Test", 3, 10)
 
-	// Active game should accept votes
-	if !game.CanAcceptVotes() {
-		t.Error("Expected active game to accept votes")
+	// Active project should accept votes
+	if !project.CanAcceptVotes() {
+		t.Error("Expected active project to accept votes")
 	}
 
-	// Paused game should not accept votes
-	game.State = models.GameStatePaused
-	if game.CanAcceptVotes() {
-		t.Error("Expected paused game to not accept votes")
+	// Paused project should not accept votes
+	project.State = models.ProjectStatePaused
+	if project.CanAcceptVotes() {
+		t.Error("Expected paused project to not accept votes")
 	}
 
-	// Completed game should not accept votes
-	game.State = models.GameStateCompleted
-	if game.CanAcceptVotes() {
+	// Completed project should not accept votes
+	project.State = models.ProjectStateCompleted
+	if project.CanAcceptVotes() {
 		t.Error("Expected completed game to not accept votes")
 	}
 }
@@ -166,29 +170,29 @@ func TestDecisionAddVote(t *testing.T) {
 }
 
 func TestGetCurrentDecision(t *testing.T) {
-	game := models.NewGame("test", "Test", 3, 10)
+	project := models.NewProject("test", "Test", 3, 10)
 
 	// No decisions yet
-	if decision := game.GetCurrentDecision(); decision != nil {
-		t.Error("Expected no current decision for new game")
+	if decision := project.GetCurrentDecision(); decision != nil {
+		t.Error("Expected no current decision for new project")
 	}
 
 	// Add a completed decision
 	completedDecision := models.NewDecision("completed", "test", "completed", 1, []string{"A", "B"})
 	completedDecision.State = models.DecisionStateCompleted
-	game.Decisions = append(game.Decisions, *completedDecision)
+	project.Decisions = append(project.Decisions, *completedDecision)
 
 	// Still no current decision
-	if decision := game.GetCurrentDecision(); decision != nil {
+	if decision := project.GetCurrentDecision(); decision != nil {
 		t.Error("Expected no current decision when only completed decisions exist")
 	}
 
 	// Add an active decision
 	activeDecision := models.NewDecision("active", "test", "active", 2, []string{"A", "B"})
-	game.Decisions = append(game.Decisions, *activeDecision)
+	project.Decisions = append(project.Decisions, *activeDecision)
 
 	// Should return the active decision
-	if decision := game.GetCurrentDecision(); decision == nil || decision.ID != "active" {
+	if decision := project.GetCurrentDecision(); decision == nil || decision.ID != "active" {
 		t.Errorf("Expected active decision, got %v", decision)
 	}
 }

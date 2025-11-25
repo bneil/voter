@@ -15,57 +15,53 @@ func NewScorer() *Scorer {
 	return &Scorer{}
 }
 
-// CalculateGameScore calculates the overall score for a completed game
-func (s *Scorer) CalculateGameScore(game *models.Game) *GameScore {
-	if !game.IsComplete() {
+// CalculateProjectScore calculates the overall score for a completed project
+func (s *Scorer) CalculateProjectScore(project *models.Project) *GameScore {
+	if !project.IsComplete() {
 		return nil
 	}
 
 	score := &GameScore{
-		GameID:             game.ID,
-		TotalScore:         0,
-		CompletionBonus:    0,
-		EfficiencyBonus:    0,
-		ParticipationBonus: 0,
-		QualityScore:       0,
-		SpeedScore:         0,
-		ConsensusScore:     0,
-		GameAverageConsensusTime: game.Metrics.AverageConsensusTime, // Populate new field
+		GameID:                   project.ID,
+		TotalScore:               0,
+		CompletionBonus:          0,
+		EfficiencyBonus:          0,
+		ParticipationBonus:       0,
+		QualityScore:             0,
+		SpeedScore:               0,
+		ConsensusScore:           0,
+		GameAverageConsensusTime: project.Metrics.AverageConsensusTime, // Populate new field
 	}
 
-	// Base score from completed decisions
-	score.TotalScore = game.Metrics.TotalDecisions * 10
+	score.TotalScore = project.Metrics.TotalDecisions * 10
 
-	// Completion bonus for finishing the game
-	if game.State == models.GameStateCompleted {
+	// Completion bonus for finishing the project
+	if project.State == models.ProjectStateCompleted {
 		score.CompletionBonus = 100
 		score.TotalScore += score.CompletionBonus
 	}
 
-	// Efficiency bonus based on consensus speed
-	if game.Metrics.AverageConsensusTime > 0 {
-		avgSeconds := game.Metrics.AverageConsensusTime.Seconds()
-
-		// Faster consensus = higher bonus
-		if avgSeconds < 10 {
+	if project.Metrics.AverageConsensusTime > 0 {
+		avgSeconds := project.Metrics.AverageConsensusTime.Seconds()
+		if avgSeconds < 30 {
 			score.EfficiencyBonus = 50
-		} else if avgSeconds < 30 {
-			score.EfficiencyBonus = 30
 		} else if avgSeconds < 60 {
-			score.EfficiencyBonus = 15
+			score.EfficiencyBonus = 25
 		}
-
 		score.TotalScore += score.EfficiencyBonus
 	}
 
-	// Participation bonus based on total votes
-	score.ParticipationBonus = game.Metrics.TotalVotes * 2
+	score.ParticipationBonus = project.Metrics.TotalVotes * 2
 	score.TotalScore += score.ParticipationBonus
 
-	// Calculate quality metrics
-	score.QualityScore = s.calculateQualityScore(game)
-	score.SpeedScore = s.calculateSpeedScore(game)
-	score.ConsensusScore = s.calculateConsensusScore(game)
+	score.QualityScore = s.calculateQualityScore(project)
+	score.TotalScore += int(score.QualityScore)
+
+	score.SpeedScore = s.calculateSpeedScore(project)
+	score.TotalScore += int(score.SpeedScore)
+
+	score.ConsensusScore = s.calculateConsensusScore(project)
+	score.TotalScore += int(score.ConsensusScore)
 
 	return score
 }
@@ -130,15 +126,15 @@ func (s *Scorer) CalculateDecisionScore(decision *models.Decision, k int) *Decis
 	return score
 }
 
-// calculateQualityScore calculates overall game quality
-func (s *Scorer) calculateQualityScore(game *models.Game) float64 {
-	if game.Metrics.TotalDecisions == 0 {
+// calculateQualityScore calculates overall project quality
+func (s *Scorer) calculateQualityScore(project *models.Project) float64 {
+	if project.Metrics.TotalDecisions == 0 {
 		return 0
 	}
 
 	// Quality based on consistency of consensus times
 	var times []time.Duration
-	for _, decision := range game.Decisions {
+	for _, decision := range project.Decisions {
 		if decision.CompletedAt != nil {
 			times = append(times, decision.CompletedAt.Sub(decision.VotingStarted))
 		}
@@ -165,14 +161,14 @@ func (s *Scorer) calculateQualityScore(game *models.Game) float64 {
 	return math.Min(1.0, quality)
 }
 
-// calculateSpeedScore calculates how quickly the game reached consensus
-func (s *Scorer) calculateSpeedScore(game *models.Game) float64 {
-	if game.Metrics.AverageConsensusTime == 0 {
+// calculateSpeedScore calculates how quickly the project reached consensus
+func (s *Scorer) calculateSpeedScore(project *models.Project) float64 {
+	if project.Metrics.AverageConsensusTime == 0 {
 		return 0
 	}
 
 	// Score based on average consensus time
-	avgSeconds := game.Metrics.AverageConsensusTime.Seconds()
+	avgSeconds := project.Metrics.AverageConsensusTime.Seconds()
 
 	// Ideal time is around 30 seconds
 	idealTime := 30.0
@@ -185,15 +181,15 @@ func (s *Scorer) calculateSpeedScore(game *models.Game) float64 {
 }
 
 // calculateConsensusScore calculates the strength of consensus across decisions
-func (s *Scorer) calculateConsensusScore(game *models.Game) float64 {
-	if len(game.Decisions) == 0 {
+func (s *Scorer) calculateConsensusScore(project *models.Project) float64 {
+	if len(project.Decisions) == 0 {
 		return 0
 	}
 
 	totalStrength := 0.0
 	completedDecisions := 0
 
-	for _, decision := range game.Decisions {
+	for _, decision := range project.Decisions {
 		if decision.Winner != nil && decision.CompletedAt != nil {
 			winnerVotes := decision.Votes[*decision.Winner]
 			totalVotes := 0
@@ -252,14 +248,14 @@ func (s *Scorer) calculateMeanDuration(durations []time.Duration) float64 {
 
 // GameScore represents the scoring breakdown for a game
 type GameScore struct {
-	GameID                 string        `json:"game_id"`
-	TotalScore             int           `json:"total_score"`
-	CompletionBonus        int           `json:"completion_bonus"`
-	EfficiencyBonus        int           `json:"efficiency_bonus"`
-	ParticipationBonus     int           `json:"participation_bonus"`
-	QualityScore           float64       `json:"quality_score"`
-	SpeedScore             float64       `json:"speed_score"`
-	ConsensusScore         float64       `json:"consensus_score"`
+	GameID                   string        `json:"game_id"`
+	TotalScore               int           `json:"total_score"`
+	CompletionBonus          int           `json:"completion_bonus"`
+	EfficiencyBonus          int           `json:"efficiency_bonus"`
+	ParticipationBonus       int           `json:"participation_bonus"`
+	QualityScore             float64       `json:"quality_score"`
+	SpeedScore               float64       `json:"speed_score"`
+	ConsensusScore           float64       `json:"consensus_score"`
 	GameAverageConsensusTime time.Duration `json:"game_average_consensus_time"` // New field
 }
 

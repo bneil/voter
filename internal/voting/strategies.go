@@ -9,8 +9,8 @@ import (
 
 // Strategy represents different voting strategies that agents can use
 type Strategy interface {
-	// DecideVote returns the option an agent should vote for given the current game state
-	DecideVote(game *models.Game, decision *models.Decision, agentID string) string
+	// DecideVote returns the option an agent should vote for given the current project state
+	DecideVote(project *models.Project, decision *models.Decision, agentID string) string
 }
 
 // RandomStrategy votes randomly among available options
@@ -24,7 +24,7 @@ func NewRandomStrategy() *RandomStrategy {
 	}
 }
 
-func (s *RandomStrategy) DecideVote(game *models.Game, decision *models.Decision, agentID string) string {
+func (s *RandomStrategy) DecideVote(project *models.Project, decision *models.Decision, agentID string) string {
 	if len(decision.Options) == 0 {
 		return ""
 	}
@@ -38,7 +38,7 @@ func NewConsensusStrategy() *ConsensusStrategy {
 	return &ConsensusStrategy{}
 }
 
-func (s *ConsensusStrategy) DecideVote(game *models.Game, decision *models.Decision, agentID string) string {
+func (s *ConsensusStrategy) DecideVote(project *models.Project, decision *models.Decision, agentID string) string {
 	if len(decision.Options) == 0 {
 		return ""
 	}
@@ -76,19 +76,19 @@ func NewOptimalStrategy(gameType string) *OptimalStrategy {
 	}
 }
 
-func (s *OptimalStrategy) DecideVote(game *models.Game, decision *models.Decision, agentID string) string {
+func (s *OptimalStrategy) DecideVote(project *models.Project, decision *models.Decision, agentID string) string {
 	// For Tower of Hanoi, this could implement optimal solving strategies
 	switch s.gameType {
 	case "tower-of-hanoi":
-		return s.decideTowerOfHanoi(game, decision)
+		return s.decideTowerOfHanoi(project, decision)
 	default:
 		// Fall back to consensus strategy
 		strategy := NewConsensusStrategy()
-		return strategy.DecideVote(game, decision, agentID)
+		return strategy.DecideVote(project, decision, agentID)
 	}
 }
 
-func (s *OptimalStrategy) decideTowerOfHanoi(game *models.Game, decision *models.Decision) string {
+func (s *OptimalStrategy) decideTowerOfHanoi(project *models.Project, decision *models.Decision) string {
 	// This is a simplified Tower of Hanoi strategy
 	// In a real implementation, this would analyze the current board state
 	// and determine the optimal move based on the game's rules
@@ -131,9 +131,9 @@ func (sv *StrategicVoter) GetStrategy(name string) Strategy {
 }
 
 // DecideVote uses the specified strategy to make a voting decision
-func (sv *StrategicVoter) DecideVote(strategyName string, game *models.Game, decision *models.Decision, agentID string) string {
+func (sv *StrategicVoter) DecideVote(strategyName string, project *models.Project, decision *models.Decision, agentID string) string {
 	strategy := sv.GetStrategy(strategyName)
-	return strategy.DecideVote(game, decision, agentID)
+	return strategy.DecideVote(project, decision, agentID)
 }
 
 // AdaptiveStrategy adjusts its behavior based on game performance
@@ -149,7 +149,7 @@ func NewAdaptiveStrategy() *AdaptiveStrategy {
 	}
 }
 
-func (s *AdaptiveStrategy) DecideVote(game *models.Game, decision *models.Decision, agentID string) string {
+func (s *AdaptiveStrategy) DecideVote(project *models.Project, decision *models.Decision, agentID string) string {
 	// Choose strategy based on historical performance
 	bestStrategy := s.getBestStrategy()
 
@@ -163,7 +163,7 @@ func (s *AdaptiveStrategy) DecideVote(game *models.Game, decision *models.Decisi
 		strategy = NewRandomStrategy()
 	}
 
-	return strategy.DecideVote(game, decision, agentID)
+	return strategy.DecideVote(project, decision, agentID)
 }
 
 // RecordOutcome records the outcome of a strategy decision

@@ -36,7 +36,7 @@ func (evs *EnhancedVotingService) InitializeStrategies() {
 }
 
 // CastStrategicVote casts a vote using a specific strategy
-func (evs *EnhancedVotingService) CastStrategicVote(game *models.Game, decision *models.Decision, agentID, strategyName string) error {
+func (evs *EnhancedVotingService) CastStrategicVote(project *models.Project, decision *models.Decision, agentID, strategyName string) error {
 	evs.mu.Lock()
 	defer evs.mu.Unlock()
 
@@ -45,7 +45,7 @@ func (evs *EnhancedVotingService) CastStrategicVote(game *models.Game, decision 
 	}
 
 	// Use strategy to decide vote
-	chosenOption := evs.strategicVoter.DecideVote(strategyName, game, decision, agentID)
+	chosenOption := evs.strategicVoter.DecideVote(strategyName, project, decision, agentID)
 
 	// Cast the vote
 	if !decision.AddVote(chosenOption) {
@@ -56,7 +56,7 @@ func (evs *EnhancedVotingService) CastStrategicVote(game *models.Game, decision 
 }
 
 // SimulateAgentVoting simulates multiple agents voting using different strategies
-func (evs *EnhancedVotingService) SimulateAgentVoting(game *models.Game, decision *models.Decision, agentCount int) error {
+func (evs *EnhancedVotingService) SimulateAgentVoting(project *models.Project, decision *models.Decision, agentCount int) error {
 	evs.mu.Lock()
 	defer evs.mu.Unlock()
 
@@ -66,7 +66,7 @@ func (evs *EnhancedVotingService) SimulateAgentVoting(game *models.Game, decisio
 		agentID := fmt.Sprintf("agent_%d", i)
 		strategy := strategies[i%len(strategies)]
 
-		chosenOption := evs.strategicVoter.DecideVote(strategy, game, decision, agentID)
+		chosenOption := evs.strategicVoter.DecideVote(strategy, project, decision, agentID)
 
 		if !decision.AddVote(chosenOption) {
 			return fmt.Errorf("failed to cast vote for agent %s: invalid option %s", agentID, chosenOption)
@@ -119,7 +119,7 @@ func (evs *EnhancedVotingService) AnalyzeVotingPatterns(decision *models.Decisio
 }
 
 // GetVotingRecommendations provides recommendations for improving voting outcomes
-func (evs *EnhancedVotingService) GetVotingRecommendations(game *models.Game, decision *models.Decision) []string {
+func (evs *EnhancedVotingService) GetVotingRecommendations(project *models.Project, decision *models.Decision) []string {
 	var recommendations []string
 
 	// Analyze current voting state
@@ -148,8 +148,8 @@ func (evs *EnhancedVotingService) GetVotingRecommendations(game *models.Game, de
 		}
 	}
 
-	// Game-specific recommendations
-	if game.Name == "Tower of Hanoi" {
+	// Project-specific recommendations
+	if project.Name == "Tower of Hanoi" {
 		recommendations = append(recommendations, "For Tower of Hanoi, consider optimal strategies that prioritize moving smaller disks")
 	}
 

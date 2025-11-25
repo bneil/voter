@@ -7,22 +7,22 @@ import (
 	"voter/internal/models"
 )
 
-// Tracker tracks and analyzes game metrics over time
+// Tracker tracks and analyzes project metrics over time
 type Tracker struct {
 	mu             sync.RWMutex
-	gameScores     map[string]*GameScore
+	projectScores  map[string]*GameScore
 	decisionScores map[string]*DecisionScore
 	globalStats    *GlobalStats
 }
 
-// GlobalStats represents global statistics across all games
+// GlobalStats represents global statistics across all projects
 type GlobalStats struct {
-	TotalGames           int                       `json:"total_games"`
+	TotalProjects        int                       `json:"total_projects"`
 	TotalDecisions       int                       `json:"total_decisions"`
-	AverageGameScore     float64                   `json:"average_game_score"`
+	AverageProjectScore  float64                   `json:"average_project_score"`
 	AverageConsensusTime time.Duration             `json:"average_consensus_time"`
-	BestGameScore        int                       `json:"best_game_score"`
-	BestGameID           string                    `json:"best_game_id"`
+	BestProjectScore     int                       `json:"best_project_score"`
+	BestProjectID        string                    `json:"best_project_id"`
 	StrategyPerformance  map[string]*StrategyStats `json:"strategy_performance"`
 }
 
@@ -37,7 +37,7 @@ type StrategyStats struct {
 // NewTracker creates a new metrics tracker
 func NewTracker() *Tracker {
 	return &Tracker{
-		gameScores:     make(map[string]*GameScore),
+		projectScores:  make(map[string]*GameScore),
 		decisionScores: make(map[string]*DecisionScore),
 		globalStats: &GlobalStats{
 			StrategyPerformance: make(map[string]*StrategyStats),
@@ -45,13 +45,13 @@ func NewTracker() *Tracker {
 	}
 }
 
-// RecordGameScore records the score for a completed game
-func (t *Tracker) RecordGameScore(game *models.Game, score *GameScore) {
+// RecordProjectScore records the score for a completed project
+func (t *Tracker) RecordProjectScore(project *models.Project, score *GameScore) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
-	t.gameScores[game.ID] = score
-	t.updateGlobalStats(game, score)
+	t.projectScores[project.ID] = score
+	t.updateGlobalStats(project, score)
 }
 
 // RecordDecisionScore records the score for a completed decision
@@ -62,12 +62,12 @@ func (t *Tracker) RecordDecisionScore(decisionID string, score *DecisionScore) {
 	t.decisionScores[decisionID] = score
 }
 
-// GetGameScore retrieves the score for a specific game
-func (t *Tracker) GetGameScore(gameID string) *GameScore {
+// GetProjectScore retrieves the score for a specific project
+func (t *Tracker) GetProjectScore(projectID string) *GameScore {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
-	return t.gameScores[gameID]
+	return t.projectScores[projectID]
 }
 
 // GetDecisionScore retrieves the score for a specific decision
@@ -88,13 +88,13 @@ func (t *Tracker) GetGlobalStats() *GlobalStats {
 	return &stats
 }
 
-// GetTopGames returns the top N games by score
-func (t *Tracker) GetTopGames(limit int) []*GameScore {
+// GetTopProjects returns the top N projects by score
+func (t *Tracker) GetTopProjects(limit int) []*GameScore {
 	t.mu.RLock()
 	defer t.mu.RUnlock()
 
 	var scores []*GameScore
-	for _, score := range t.gameScores {
+	for _, score := range t.projectScores {
 		scores = append(scores, score)
 	}
 
@@ -131,59 +131,58 @@ func (t *Tracker) GetPerformanceTrends() *PerformanceTrends {
 
 	trends := &PerformanceTrends{
 		TimeRange:      "all",
-		GameScores:     make([]int, 0, len(t.gameScores)),
-		ConsensusTimes: make([]time.Duration, 0, len(t.gameScores)),
+		ProjectScores:  make([]int, 0, len(t.projectScores)),
+		ConsensusTimes: make([]time.Duration, 0, len(t.projectScores)),
 	}
 
-	for _, score := range t.gameScores {
-		trends.GameScores = append(trends.GameScores, score.TotalScore)
+	for _, score := range t.projectScores {
+		trends.ProjectScores = append(trends.ProjectScores, score.TotalScore)
 	}
 
 	// Calculate trends
-	if len(trends.GameScores) > 1 {
-		trends.ScoreTrend = t.calculateTrend(trends.GameScores)
+	if len(trends.ProjectScores) > 1 {
+		trends.ScoreTrend = t.calculateTrend(trends.ProjectScores)
 	}
 
 	return trends
 }
 
 // updateGlobalStats updates the global statistics with new game data
-func (t *Tracker) updateGlobalStats(game *models.Game, score *GameScore) {
-	t.globalStats.TotalGames++
-	t.globalStats.TotalDecisions += game.Metrics.TotalDecisions
+func (t *Tracker) updateGlobalStats(project *models.Project, score *GameScore) {
+	t.globalStats.TotalProjects++
+	t.globalStats.TotalDecisions += project.Metrics.TotalDecisions
 
-	// Update average game score
+	// Update average project score
 	totalScoreSum := 0
-	for _, s := range t.gameScores {
+	for _, s := range t.projectScores {
 		totalScoreSum += s.TotalScore
 	}
-	if t.globalStats.TotalGames > 0 {
-		t.globalStats.AverageGameScore = float64(totalScoreSum) / float64(t.globalStats.TotalGames)
+	if t.globalStats.TotalProjects > 0 {
+		t.globalStats.AverageProjectScore = float64(totalScoreSum) / float64(t.globalStats.TotalProjects)
 	} else {
-		t.globalStats.AverageGameScore = 0
+		t.globalStats.AverageProjectScore = 0
 	}
 
-	// Update best game
-	if score.TotalScore > t.globalStats.BestGameScore {
-		t.globalStats.BestGameScore = score.TotalScore
-		t.globalStats.BestGameID = game.ID
+	// Update best project
+	if score.TotalScore > t.globalStats.BestProjectScore {
+		t.globalStats.BestProjectScore = score.TotalScore
+		t.globalStats.BestProjectID = project.ID
 	}
 
 	// Update average consensus time
 	totalConsensusTimeNanos := int64(0)
-	gamesWithConsensusTime := 0
-	for _, s := range t.gameScores {
+	projectsWithConsensusTime := 0
+	for _, s := range t.projectScores {
 		if s.GameAverageConsensusTime > 0 {
 			totalConsensusTimeNanos += s.GameAverageConsensusTime.Nanoseconds()
-			gamesWithConsensusTime++
+			projectsWithConsensusTime++
 		}
 	}
-	if gamesWithConsensusTime > 0 {
-		t.globalStats.AverageConsensusTime = time.Duration(totalConsensusTimeNanos / int64(gamesWithConsensusTime))
+	if projectsWithConsensusTime > 0 {
+		t.globalStats.AverageConsensusTime = time.Duration(totalConsensusTimeNanos / int64(projectsWithConsensusTime))
 	} else {
 		t.globalStats.AverageConsensusTime = 0
 	}
-
 
 }
 
@@ -223,7 +222,7 @@ func (t *Tracker) calculateTrend(values []int) string {
 // PerformanceTrends represents performance trends over time
 type PerformanceTrends struct {
 	TimeRange      string          `json:"time_range"`
-	GameScores     []int           `json:"game_scores"`
+	ProjectScores  []int           `json:"project_scores"`
 	ConsensusTimes []time.Duration `json:"consensus_times"`
 	ScoreTrend     string          `json:"score_trend"`
 }
