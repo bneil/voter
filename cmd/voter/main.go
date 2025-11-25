@@ -38,22 +38,20 @@ func main() {
 	args := os.Args[2:]
 
 	switch command {
-	case "create-game":
-		handleCreateGame(gameService, args)
+	case "create-project":
+		handleCreateProject(gameService, args)
 	case "start-decision":
 		handleStartDecision(gameService, args)
 	case "vote":
 		handleVote(gameService, args)
 	case "close-voting":
 		handleCloseVoting(gameService, args)
-	case "game-status":
-		handleGameStatus(gameService, scorer, args)
-	case "list-games":
-		handleListGames(gameService, args)
-	case "simulate-voting":
-		handleSimulateVoting(gameService, enhancedVoting, args)
-	case "game-stats":
-		handleGameStats(metricsTracker, args)
+	case "project-status":
+		handleProjectStatus(gameService, scorer, args)
+	case "list-projects":
+		handleListProjects(gameService, args)
+	case "project-stats":
+		handleProjectStats(metricsTracker, args)
 	case "strategic-vote":
 		handleStrategicVote(gameService, enhancedVoting, args)
 	default:
@@ -63,7 +61,7 @@ func main() {
 	}
 }
 
-func handleCreateGame(service *game.Service, args []string) {
+func handleCreateProject(service *game.Service, args []string) {
 	if len(args) < 3 {
 		fmt.Println("Usage: create-game <id> <name> <k> <max-turns>")
 		os.Exit(1)
@@ -93,7 +91,7 @@ func handleCreateGame(service *game.Service, args []string) {
 	}
 
 	fmt.Printf("Game created successfully:\n")
-	printGame(game)
+	printProject(game)
 }
 
 func handleStartDecision(service *game.Service, args []string) {
@@ -158,7 +156,7 @@ func handleCloseVoting(service *game.Service, args []string) {
 	fmt.Printf("Voting closed for game %s\n", gameID)
 }
 
-func handleGameStatus(service *game.Service, scorer *metrics.Scorer, args []string) {
+func handleProjectStatus(service *game.Service, scorer *metrics.Scorer, args []string) {
 	if len(args) < 1 {
 		fmt.Println("Usage: game-status <game-id>")
 		os.Exit(1)
@@ -206,7 +204,7 @@ func handleGameStatus(service *game.Service, scorer *metrics.Scorer, args []stri
 	}
 }
 
-func handleListGames(service *game.Service, args []string) {
+func handleListProjects(service *game.Service, args []string) {
 	games, err := service.ListGames()
 	if err != nil {
 		fmt.Printf("Failed to list games: %v\n", err)
@@ -260,7 +258,7 @@ func handleSimulateVoting(service *game.Service, enhancedVoting *voting.Enhanced
 	fmt.Printf("Simulated %d agents voting\n", agentCount)
 }
 
-func handleGameStats(tracker *metrics.Tracker, args []string) {
+func handleProjectStats(tracker *metrics.Tracker, args []string) {
 	stats := tracker.GetGlobalStats()
 
 	fmt.Printf("Global Statistics:\n")
@@ -305,8 +303,8 @@ func handleStrategicVote(service *game.Service, enhancedVoting *voting.EnhancedV
 	fmt.Printf("Strategic vote cast by agent %s using %s strategy\n", agentID, strategy)
 }
 
-func printGame(game *models.Game) {
-	data, _ := json.MarshalIndent(game, "", "  ")
+func printProject(project *models.Game) {
+	data, _ := json.MarshalIndent(project, "", "  ")
 	fmt.Println(string(data))
 }
 
@@ -319,15 +317,15 @@ func printUsage() {
 	fmt.Println("Voter - First-to-Ahead-by-K Voting System")
 	fmt.Println()
 	fmt.Println("Commands:")
-	fmt.Println("  create-game <id> <name> <k> [max-turns]    Create a new game")
-	fmt.Println("  start-decision <game-id> <desc> <opt1> <opt2> [opt3...]  Start a voting decision")
-	fmt.Println("  vote <game-id> <decision-id> <agent-id> <option>          Cast a vote")
-	fmt.Println("  strategic-vote <game-id> <decision-id> <agent-id> <strategy>  Cast strategic vote")
-	fmt.Println("  simulate-voting <game-id> <decision-id> <agent-count>     Simulate agent voting")
-	fmt.Println("  close-voting <game-id>                          Close voting for game")
-	fmt.Println("  game-status <game-id>                           Show game status")
-	fmt.Println("  list-games                                     List all games")
-	fmt.Println("  game-stats                                     Show global statistics")
+	fmt.Println("  create-project <id> <name> <k> [max-turns]    Create a new project")
+	fmt.Println("  start-decision <project-id> <desc> <opt1> <opt2> [opt3...]  Start a voting decision")
+	fmt.Println("  vote <project-id> <decision-id> <agent-id> <option>          Cast a vote")
+	fmt.Println("  strategic-vote <project-id> <decision-id> <agent-id> <strategy>  Cast strategic vote")
+	fmt.Println("  simulate-voting <project-id> <decision-id> <agent-count>     Simulate agent voting")
+	fmt.Println("  close-voting <project-id>                          Close voting for project")
+	fmt.Println("  project-status <project-id>                           Show project status")
+	fmt.Println("  list-projects                                  List all projects")
+	fmt.Println("  project-stats                                  Show global statistics")
 	fmt.Println()
 	fmt.Println("Strategies: random, consensus, optimal")
 }
