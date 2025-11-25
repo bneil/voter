@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 // ProgressionManager handles game progression logic

@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 // Tracker tracks and analyzes project metrics over time

@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 // EnhancedVotingService provides advanced voting capabilities with strategies

@@ -1,6 +1,6 @@
 package storage
 
-import "voter/internal/models"
+import "github.com/bneil/voter/internal/models"
 
 // ProjectStore defines the interface for project storage operations
 type ProjectStore interface {

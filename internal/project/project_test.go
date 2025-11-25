@@ -3,10 +3,10 @@ package project_test
 import (
 	"testing"
 
-	"voter/internal/models"
-	"voter/internal/project"
-	"voter/internal/storage"
-	"voter/internal/voting"
+	"github.com/bneil/voter/internal/models"
+	"github.com/bneil/voter/internal/project"
+	"github.com/bneil/voter/internal/storage"
+	"github.com/bneil/voter/internal/voting"
 )
 
 func setupTestServices(t *testing.T) (*project.Service, *storage.JSONProjectStore) {

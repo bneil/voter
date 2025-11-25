@@ -4,7 +4,7 @@ import (
 	"math"
 	"time"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 // Scorer calculates performance scores for games and decisions

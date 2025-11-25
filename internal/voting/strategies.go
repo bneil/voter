@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"time"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 // Strategy represents different voting strategies that agents can use

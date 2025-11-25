@@ -8,11 +8,11 @@ import (
 	"strconv"
 	"strings"
 
-	"voter/internal/metrics"
-	"voter/internal/models"
-	"voter/internal/project"
-	"voter/internal/storage"
-	"voter/internal/voting"
+	"github.com/bneil/voter/internal/metrics"
+	"github.com/bneil/voter/internal/models"
+	"github.com/bneil/voter/internal/project"
+	"github.com/bneil/voter/internal/storage"
+	"github.com/bneil/voter/internal/voting"
 )
 
 func main() {

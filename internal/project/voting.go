@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 var (

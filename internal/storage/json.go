@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"sync"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 // JSONProjectStore implements ProjectStore using JSON file storage

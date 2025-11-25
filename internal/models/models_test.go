@@ -3,7 +3,7 @@ package models_test
 import (
 	"testing"
 
-	"voter/internal/models"
+	"github.com/bneil/voter/internal/models"
 )
 
 func TestNewProject(t *testing.T) {
