@@ -45,13 +45,10 @@ jobs:
         GOOS=windows GOARCH=amd64 make build
         mv bin/voter bin/voter-windows-amd64.exe
 
-    - name: Create release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Create release and upload binaries
+      uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ github.ref_name }}
-        release_name: Release ${{ github.ref_name }}
+        name: Release ${{ github.ref_name }}
         body: |
           ## Changes
 
@@ -65,43 +62,8 @@ jobs:
           - **Windows (amd64)**: `voter-windows-amd64.exe`
         draft: false
         prerelease: false
-
-    - name: Upload Linux binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/voter-linux-amd64
-        asset_name: voter-linux-amd64
-        asset_content_type: application/octet-stream
-
-    - name: Upload macOS Intel binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/voter-darwin-amd64
-        asset_name: voter-darwin-amd64
-        asset_content_type: application/octet-stream
-
-    - name: Upload macOS Apple Silicon binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/voter-darwin-arm64
-        asset_name: voter-darwin-arm64
-        asset_content_type: application/octet-stream
-
-    - name: Upload Windows binary
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./bin/voter-windows-amd64.exe
-        asset_name: voter-windows-amd64.exe
-        asset_content_type: application/octet-stream
+        files: |
+          bin/voter-linux-amd64
+          bin/voter-darwin-amd64
+          bin/voter-darwin-arm64
+          bin/voter-windows-amd64.exe
