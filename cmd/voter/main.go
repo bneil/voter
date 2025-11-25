@@ -52,6 +52,8 @@ func main() {
 		handleListProjects(gameService, args)
 	case "project-stats":
 		handleProjectStats(metricsTracker, args)
+	case "simulate-voting":
+		handleSimulateVoting(gameService, enhancedVoting, args)
 	case "strategic-vote":
 		handleStrategicVote(gameService, enhancedVoting, args)
 	default:

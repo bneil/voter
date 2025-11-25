@@ -153,12 +153,15 @@ func (t *Tracker) updateGlobalStats(game *models.Game, score *GameScore) {
 	t.globalStats.TotalDecisions += game.Metrics.TotalDecisions
 
 	// Update average game score
-	totalScore := 0
+	totalScoreSum := 0
 	for _, s := range t.gameScores {
-		totalScore += s.TotalScore
+		totalScoreSum += s.TotalScore
 	}
-	totalScore += score.TotalScore
-	t.globalStats.AverageGameScore = float64(totalScore) / float64(t.globalStats.TotalGames)
+	if t.globalStats.TotalGames > 0 {
+		t.globalStats.AverageGameScore = float64(totalScoreSum) / float64(t.globalStats.TotalGames)
+	} else {
+		t.globalStats.AverageGameScore = 0
+	}
 
 	// Update best game
 	if score.TotalScore > t.globalStats.BestGameScore {
@@ -167,19 +170,21 @@ func (t *Tracker) updateGlobalStats(game *models.Game, score *GameScore) {
 	}
 
 	// Update average consensus time
-	totalTime := time.Duration(0)
-	gameCount := len(t.gameScores)
-	if game.Metrics.AverageConsensusTime > 0 {
-		totalTime = time.Duration(len(t.gameScores)) * game.Metrics.AverageConsensusTime
-		gameCount++
+	totalConsensusTimeNanos := int64(0)
+	gamesWithConsensusTime := 0
+	for _, s := range t.gameScores {
+		if s.GameAverageConsensusTime > 0 {
+			totalConsensusTimeNanos += s.GameAverageConsensusTime.Nanoseconds()
+			gamesWithConsensusTime++
+		}
 	}
-	if game.Metrics.AverageConsensusTime > 0 {
-		totalTime += game.Metrics.AverageConsensusTime
-		gameCount++
+	if gamesWithConsensusTime > 0 {
+		t.globalStats.AverageConsensusTime = time.Duration(totalConsensusTimeNanos / int64(gamesWithConsensusTime))
+	} else {
+		t.globalStats.AverageConsensusTime = 0
 	}
-	if gameCount > 0 {
-		t.globalStats.AverageConsensusTime = totalTime / time.Duration(gameCount)
-	}
+
+
 }
 
 // calculateTrend calculates the trend direction of a series of values

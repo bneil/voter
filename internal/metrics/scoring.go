@@ -30,6 +30,7 @@ func (s *Scorer) CalculateGameScore(game *models.Game) *GameScore {
 		QualityScore:       0,
 		SpeedScore:         0,
 		ConsensusScore:     0,
+		GameAverageConsensusTime: game.Metrics.AverageConsensusTime, // Populate new field
 	}
 
 	// Base score from completed decisions
@@ -251,14 +252,15 @@ func (s *Scorer) calculateMeanDuration(durations []time.Duration) float64 {
 
 // GameScore represents the scoring breakdown for a game
 type GameScore struct {
-	GameID             string  `json:"game_id"`
-	TotalScore         int     `json:"total_score"`
-	CompletionBonus    int     `json:"completion_bonus"`
-	EfficiencyBonus    int     `json:"efficiency_bonus"`
-	ParticipationBonus int     `json:"participation_bonus"`
-	QualityScore       float64 `json:"quality_score"`
-	SpeedScore         float64 `json:"speed_score"`
-	ConsensusScore     float64 `json:"consensus_score"`
+	GameID                 string        `json:"game_id"`
+	TotalScore             int           `json:"total_score"`
+	CompletionBonus        int           `json:"completion_bonus"`
+	EfficiencyBonus        int           `json:"efficiency_bonus"`
+	ParticipationBonus     int           `json:"participation_bonus"`
+	QualityScore           float64       `json:"quality_score"`
+	SpeedScore             float64       `json:"speed_score"`
+	ConsensusScore         float64       `json:"consensus_score"`
+	GameAverageConsensusTime time.Duration `json:"game_average_consensus_time"` // New field
 }
 
 // DecisionScore represents the scoring breakdown for a decision
