@@ -35,3 +35,7 @@ make build
 make test
 make test-coverage
 ```
+
+## Sources for this idea
+[Annals of Operations Research](https://link.springer.com/article/10.1007/s10479-024-06239-3)
+[Solving a Million-Step LLM Task with Zero Errors](https://arxiv.org/abs/2511.09030)
